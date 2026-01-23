@@ -13,21 +13,23 @@ DATA_PATH = r"C:\Users\UJWALA\Downloads\Abhiram_resume.pdf"
 CHUNK_SIZE = 800
 CHUNK_OVERLAP = 150
 TOP_K = 3
+#loading the document 
 def load_document(path):
     return PyPDFLoader(path).load()
+#splitting the texts
 def split_documents(documents):
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=CHUNK_SIZE,
         chunk_overlap=CHUNK_OVERLAP
     )
     return splitter.split_documents(documents)
+#creating embeddings
 def create_vectorstore(chunks):
     embeddings = HuggingFaceEmbeddings(
         model_name="sentence-transformers/all-MiniLM-L6-v2"
     )
     return FAISS.from_documents(chunks, embeddings)
-
-# ---------------- PROMPT ----------------
+#prompt template
 prompt = PromptTemplate.from_template(
     """
 Answer the question strictly using the context below.
@@ -43,8 +45,7 @@ Question:
 Answer:
 """
 )
-
-# ---------------- LLM (OPEN SOURCE) ----------------
+#loading the llm
 def load_llm():
     hf_pipeline = pipeline(
         "text2text-generation",
@@ -53,7 +54,6 @@ def load_llm():
     )
     return HuggingFacePipeline(pipeline=hf_pipeline)
 
-# ---------------- MAIN ----------------
 def main():
     print("🔹 Loading document...")
     docs = load_document(DATA_PATH)
@@ -67,7 +67,6 @@ def main():
     retriever = vectorstore.as_retriever(search_kwargs={"k": TOP_K})
     llm = load_llm()
 
-    # -------- RAG PIPELINE --------
     rag_chain = (
         {
             "context": lambda q: "\n\n".join(
@@ -80,7 +79,7 @@ def main():
         | RunnableLambda(lambda x: x.strip())
     )
 
-    print("\n✅ RAG system ready. Ask questions (type 'exit' to quit)\n")
+    print("\n✅ RAG system ready. ...Ask questions (type 'exit' to quit)\n")
 
     while True:
         query = input("User: ")
@@ -91,6 +90,6 @@ def main():
         answer = rag_chain.invoke(query)
         print("\nAnswer:\n", answer, "\n")
 
-# ---------------- ENTRY ----------------
 if __name__ == "__main__":
+
     main()

@@ -1,3 +1,8 @@
 faiss-cpu
+fitz
+numpy 
+torch
+sentence_transformers 
+transformers
 
 
